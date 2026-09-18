@@ -25,8 +25,8 @@ Full-stack Pokémon encyclopedia built with Go/Gin, HTMX, and TailwindCSS. Featu
 ## Quick Start
 
 ```bash
-# 1. Navigate to project
-cd ~/Documents/pokedex-go
+# 1. Navigate to project directory
+
 
 # 2. Install dependencies
 go mod tidy
