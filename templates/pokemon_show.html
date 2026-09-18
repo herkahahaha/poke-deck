@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{.Name}} — PokeDB</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            poke: {
+              red: '#EE1515F',
+              blue: '#2A479D',
+              dark: '#1A1A2E',
+              accent: '#F5A623',
+            }
+          },
+          fontFamily: {
+            display: ['"Segoe UI"', 'Roboto', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background: linear-gradient(135deg, #1A1A2E 0%, #16213E 50%, #0F3460 100%); min-height: 100vh; }
+    .poke-card { transition: all 0.2s ease; }
+    .poke-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(238, 21, 31, 0.3); }
+    .type-badge { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.05em; }
+  </style>
+</head>
+<body class="text-white font-display">
+
+  <!-- Navbar -->
+  <nav class="bg-poke-dark/90 backdrop-blur border-b border-poke-red/30 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full bg-poke-red flex items-center justify-center text-lg font-bold">P</div>
+        <span class="text-xl font-bold tracking-tight">Poke<span class="text-poke-red">DB</span></span>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="/" class="text-sm text-gray-300 hover:text-white transition flex items-center gap-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Pokédex
+        </a>
+        <a href="/pokemon/create" class="bg-poke-red hover:bg-poke-red/90 text-white text-sm px-4 py-2 rounded-lg transition flex items-center gap-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Add Pokémon
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="max-w-4xl mx-auto px-4 py-8">
+    
+    <!-- Back link -->
+    <a href="/" class="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white transition mb-6">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+      Back to Pokédex
+    </a>
+
+    <!-- Detail Card -->
+    <div class="poke-card bg-poke-dark/70 backdrop-blur rounded-2xl border border-white/5 overflow-hidden">
+      <!-- Image -->
+      <div class="relative h-64 bg-gradient-to-br from-poke-dark to-poke-blue flex items-center justify-center overflow-hidden">
+        {{if .ImageURL}}
+          <img src="{{.ImageURL}}" alt="{{.Name}}" 
+               class="absolute inset-0 w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity duration-300">
+        {{else}}
+          <div class="text-8xl opacity-30">🔴</div>
+        {{end}}
+        <div class="absolute top-4 right-4">
+          <span class="type-badge px-3 py-1.5 rounded-full bg-poke-red/90 text-white">
+            {{.Type1}}
+          </span>
+          {{if .Type2}}
+            <span class="type-badge px-3 py-1.5 rounded-full bg-poke-accent/90 text-white ml-2">
+              {{.Type2}}
+            </span>
+          {{end}}
+        </div>
+        <div class="absolute bottom-4 left-4">
+          <span class="text-sm text-gray-300 bg-poke-dark/80 px-3 py-1.5 rounded-lg">
+            No.{{.ID}}
+          </span>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="p-6">
+        <h1 class="text-3xl font-bold text-white mb-4">{{.Name}}</h1>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 text-sm">
+          <div class="bg-white/5 rounded-xl p-4">
+            <p class="text-gray-400 text-xs mb-1">Height</p>
+            <p class="text-white font-semibold text-lg">{{.Height}}</p>
+          </div>
+          <div class="bg-white/5 rounded-xl p-4">
+            <p class="text-gray-400 text-xs mb-1">Weight</p>
+            <p class="text-white font-semibold text-lg">{{.Weight}}</p>
+          </div>
+          <div class="bg-white/5 rounded-xl p-4">
+            <p class="text-gray-400 text-xs mb-1">Base Exp</p>
+            <p class="text-white font-semibold text-lg">{{.BaseExperience}}</p>
+          </div>
+          <div class="bg-white/5 rounded-xl p-4">
+            <p class="text-gray-400 text-xs mb-1">Evolves From</p>
+            <p class="text-white font-semibold text-lg">{{.EvolvesFromStatus}}</p>
+          </div>
+        </div>
+
+        <div class="mb-6">
+          <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">Description</h3>
+          <p class="text-gray-200 text-base leading-relaxed">{{.Description}}</p>
+        </div>
+
+        <div class="flex gap-3 mt-6">
+          <a href="/pokemon/{{.ID}}/edit" 
+             class="flex-1 bg-poke-blue hover:bg-poke-blue/90 text-white text-sm font-medium py-3 px-4 rounded-xl transition flex items-center justify-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            Edit
+          </a>
+          <button 
+            class="flex-1 bg-poke-red hover:bg-poke-red/90 text-white text-sm font-medium py-3 px-4 rounded-xl transition flex items-center justify-center gap-2"
+            hx-delete="/pokemon/{{.ID}}" 
+            hx-confirm="Delete {{.Name}}? This cannot be undone."
+            hx-target="closest div"
+            hx-swap="outerHTML"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="mt-12 py-6 border-t border-white/5 text-center text-gray-500 text-xs">
+    PokeDB · Built with Go/Gin + HTMX + TailwindCSS · Data stored in SQLite
+  </footer>
+
+</body>
+</html>

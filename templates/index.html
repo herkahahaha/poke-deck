@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PokeDB — Full Pokémon Encyclopedia</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            poke: {
+              red: '#EE1515F',
+              blue: '#2A479D',
+              dark: '#1A1A2E',
+              accent: '#F5A623',
+            }
+          },
+          fontFamily: {
+            display: ['"Segoe UI"', 'Roboto', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background: linear-gradient(135deg, #1A1A2E 0%, #16213E 50%, #0F3460 100%); min-height: 100vh; }
+    .poke-card { transition: all 0.2s ease; }
+    .poke-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(238, 21, 31, 0.3); }
+    .type-badge { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.05em; }
+  </style>
+</head>
+<body class="text-white font-display">
+
+  <!-- Navbar -->
+  <nav class="bg-poke-dark/90 backdrop-blur border-b border-poke-red/30 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full bg-poke-red flex items-center justify-center text-lg font-bold">P</div>
+        <span class="text-xl font-bold tracking-tight">Poke<span class="text-poke-red">DB</span></span>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="/" class="text-sm text-gray-300 hover:text-white transition flex items-center gap-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Pokédex
+        </a>
+        <a href="/pokemon/create" class="bg-poke-red hover:bg-poke-red/90 text-white text-sm px-4 py-2 rounded-lg transition flex items-center gap-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Add Pokémon
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-4 py-8">
+
+    <!-- Header -->
+    <div class="mb-8 text-center">
+      <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-poke-red to-poke-accent mb-2">
+        Pokédex
+      </h1>
+      <p class="text-gray-400 text-sm">Complete Pokémon database — browse, add, edit, and manage every Pokémon</p>
+    </div>
+
+    <!-- Stats bar -->
+    <div class="flex flex-wrap gap-4 mb-8 justify-center">
+      <div class="bg-poke-dark/60 backdrop-blur rounded-xl px-4 py-3 border border-white/5 flex items-center gap-3 min-w-[180px]">
+        <div class="w-10 h-10 rounded-full bg-poke-blue flex items-center justify-center">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14-2a2 2 0 002 2v6a2 2 0 00-2 2H5a2 2 0 00-2-2v-6a2 2 0 002-2"/></svg>
+        </div>
+        <div>
+          <p class="text-xs text-gray-400">Total Pokémon</p>
+          <p class="text-xl font-bold" id="total-count">—</p>
+        </div>
+      </div>
+      <div class="bg-poke-dark/60 backdrop-blur rounded-xl px-4 py-3 border border-white/5 flex items-center gap-3 min-w-[180px]">
+        <div class="w-10 h-10 rounded-full bg-poke-accent flex items-center justify-center">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/></svg>
+        </div>
+        <div>
+          <p class="text-xs text-gray-400">Search</p>
+          <div class="relative mt-1">
+            <input type="text" id="search-input" name="query"
+                   class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-poke-red/50"
+                   placeholder="Search by name..."
+                   hx-post="/pokemon/search"
+                   hx-trigger="keyup changed delay:300ms"
+                   hx-target="#pokemon-grid"
+                   hx-include="#search-input"
+                   hx-indicator="#search-spinner">
+            <div id="search-spinner" class="htmx-indicator flex justify-center">
+              <svg class="animate-spin h-5 w-5 text-poke-red" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pokemon Grid -->
+    <div id="pokemon-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <!-- Server loads here via HTMX -->
+    </div>
+
+    <!-- Pagination Controls -->
+    <!--<nav id="pagination" class="flex items-center justify-center gap-2 mt-8" aria-label="Pagination">-->
+      <!-- HTMX will populate this -->
+    <!--</nav>-->
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="mt-12 py-6 border-t border-white/5 text-center text-gray-500 text-xs">
+    PokeDB · Built with Go/Gin + HTMX + TailwindCSS · Data stored in SQLite
+  </footer>
+
+  <!-- Initial load trigger -->
+  <div hx-get="/pokemon?page=1" hx-trigger="load" hx-target="#pokemon-grid" hx-swap="innerHTML" class="hidden"></div>
+  <div hx-get="/stats" hx-trigger="load" hx-target="#total-count" hx-swap="innerHTML" class="hidden"></div>
+  <div hx-get="/pokemon?page=1" hx-trigger="load" hx-target="#pagination" hx-swap="innerHTML" class="hidden"></div>
+
+</body>
+</html>

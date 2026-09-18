@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{if eq .mode "edit"}}Edit{{else}}Add{{end}} Pokémon — PokeDB</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js"></script>
+  <style>
+    body { background: linear-gradient(135deg, #1A1A2E 0%, #16213E 50%, #0F3460 100%); min-height: 100vh; }
+  </style>
+</head>
+<body class="text-white font-display min-h-screen flex items-center justify-center p-4">
+
+  <div class="w-full max-w-lg">
+    <!-- Card -->
+    <div class="bg-poke-dark/80 backdrop-blur rounded-2xl border border-white/5 overflow-hidden">
+      
+      <!-- Header -->
+      <div class="bg-poke-red/20 px-6 py-4 border-b border-white/5 flex items-center gap-3">
+        <div class="w-8 h-8 rounded-full bg-poke-red flex items-center justify-center text-sm font-bold">
+          {{if eq .mode "edit"}}✏️{{else}}➕{{end}}
+        </div>
+        <div>
+          <h1 class="text-lg font-bold">{{if eq .mode "edit"}}Edit{{else}}Add{{end}} Pokémon</h1>
+          <p class="text-xs text-gray-400">{{if eq .mode "edit"}}Update an existing Pokémon{{else}}Add a new Pokémon to the Pokédex{{end}}</p>
+        </div>
+      </div>
+
+      <!-- Form -->
+      <form 
+        action="{{if eq .mode "edit"}}/pokemon/{{.id}}/update{{else}}/pokemon/create{{end}}"
+        method="POST"
+        class="p-6 space-y-5"
+        hx-encoding="multipart/form-data"
+      >
+        <!-- Name -->
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1">Name <span class="text-poke-red">*</span></label>
+          <input type="text" name="name" value="{{.pokemon.Name}}" required
+                 class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-poke-red/50 focus:border-poke-red transition"
+                 placeholder="e.g. Pikachu">
+        </div>
+
+        <!-- Types -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Type 1 <span class="text-poke-red">*</span></label>
+            <select name="type1" required
+                    class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-poke-red/50 transition">
+              <option value="" disabled {{if not .pokemon.Type1}}selected{{end}}>Select type</option>
+              {{range .types}}
+                <option value="{{.}}" {{if eq $.pokemon.Type1 .}}selected{{end}}>{{.}}</option>
+              {{end}}
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Type 2</label>
+            <select name="type2"
+                    class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-poke-red/50 transition">
+              <option value="">None</option>
+              {{range .types}}
+                <option value="{{.}}" {{if eq $.pokemon.Type2 .}}selected{{end}}>{{.}}</option>
+              {{end}}
+            </select>
+          </div>
+        </div>
+
+        <!-- Height & Weight -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Height <span class="text-poke-red">*</span></label>
+            <input type="text" name="height" value="{{.pokemon.Height}}" required
+                   class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-poke-red/50 transition"
+                   placeholder="e.g. 0.4 m">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Weight <span class="text-poke-red">*</span></label>
+            <input type="text" name="weight" value="{{.pokemon.Weight}}" required
+                   class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-poke-red/50 transition"
+                   placeholder="e.g. 6.0 kg">
+          </div>
+        </div>
+
+        <!-- Base Experience -->
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1">Base Experience</label>
+          <input type="number" name="base_experience" value="{{.pokemon.BaseExperience}}" min="0"
+                 class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-poke-red/50 transition"
+                 placeholder="e.g. 112">
+        </div>
+
+        <!-- Image URL -->
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1">Image URL</label>
+          <input type="url" name="image_url" value="{{.pokemon.ImageURL}}"
+                 class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-poke-red/50 transition"
+                 placeholder="https://...">
+        </div>
+
+        <!-- Description -->
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1">Description</label>
+          <textarea name="description" rows="3"
+                    class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-poke-red/50 transition resize-none"
+                    placeholder="Describe this Pokémon...">{{.pokemon.Description}}</textarea>
+        </div>
+
+        <!-- Evolves From -->
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1">Evolves From</label>
+          <input type="text" name="evolves_from" value="{{.pokemon.EvolvesFromStatus}}"
+                 class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-poke-red/50 transition"
+                 placeholder="e.g. evolves from Pikachu when leveled up with Thunder Stone">
+        </div>
+
+        <!-- Submit -->
+        <div class="pt-2">
+          <button type="submit"
+                  class="w-full bg-poke-red hover:bg-poke-red/90 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 text-lg">
+            {{if eq .mode "edit"}}💾 Update Pokémon{{else}}🚀 Add to Pokédex{{end}}
+          </button>
+        </div>
+      </form>
+
+      <!-- Footer actions -->
+      <div class="px-6 py-3 border-t border-white/5 flex justify-between items-center">
+        <a href="/" class="text-sm text-gray-400 hover:text-white transition">← Back to Pokédex</a>
+        {{if eq .mode "edit"}}
+        <a href="/pokemon/{{.id}}" class="text-sm text-poke-blue hover:text-poke-blue/90 transition">View details</a>
+        {{end}}
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

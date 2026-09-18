@@ -1,0 +1,41 @@
+{{define "pokemon_grid"}}
+<div class="poke-card bg-poke-dark/70 backdrop-blur rounded-2xl border border-white/5 overflow-hidden">
+  <div class="relative h-40 bg-gradient-to-br from-poke-dark to-poke-blue flex items-center justify-center overflow-hidden">
+    {{if .ImageURL}}
+      <img src="{{.ImageURL}}" alt="{{.Name}}" 
+           class="absolute inset-0 w-full h-full object-cover opacity-70 hover:opacity-100 transition-opacity">
+    {{else}}
+      <div class="text-5xl opacity-20">🔴</div>
+    {{end}}
+    <div class="absolute top-2 right-2 flex gap-1">
+      <span class="type-badge px-1.5 py-0.5 rounded-full bg-poke-red/90 text-white text-[10px]">{{.Type1}}</span>
+      {{if .Type2}}
+        <span class="type-badge px-1.5 py-0.5 rounded-full bg-poke-accent/90 text-white text-[10px] ml-0.5">{{.Type2}}</span>
+      {{end}}
+    </div>
+    <div class="absolute bottom-2 left-3 text-xs text-gray-400 bg-poke-dark/80 px-1.5 py-0.5 rounded">
+      No.{{.ID}}
+    </div>
+  </div>
+  <div class="p-4">
+    <h3 class="text-base font-bold text-white mb-1">{{.Name}}</h3>
+    <p class="text-xs text-gray-400 mb-2 line-clamp-2">{{.Description}}</p>
+    <div class="flex items-center gap-3 text-xs text-gray-400 mb-3">
+      <span>📏 {{.Height}}</span>
+      <span>⚖️ {{.Weight}}</span>
+    </div>
+    <a href="/pokemon/{{.ID}}" 
+       class="block w-full bg-poke-blue/80 hover:bg-poke-blue text-white text-sm font-medium py-2 rounded-lg transition text-center">
+      View Details
+    </a>
+  </div>
+</div>
+{{end}}
+
+{{define "empty_state"}}
+<div class="col-span-full flex flex-col items-center justify-center py-16 text-gray-500">
+  <div class="text-6xl mb-4 opacity-30">🔴</div>
+  <p class="text-xl font-medium text-gray-400 mb-1">No Pokémon found</p>
+  <p class="text-sm">Add your first Pokémon to the Pokédex!</p>
+</div>
+{{end}}
