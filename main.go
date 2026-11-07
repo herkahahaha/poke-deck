@@ -20,12 +20,11 @@ func main() {
 	seedLimit := flag.Int("limit", 151, "Number of Pokémon to seed (0 = all, default 151 for Gen 1)")
 	flag.Parse()
 
-	// Determine project root (Documents/pokedex-go)
-	execPath, err := os.Executable()
+	// Determine project root - use current working directory for go run compatibility
+	projectRoot, err := os.Getwd()
 	if err != nil {
-		execPath = "."
+		log.Fatalf("Failed to get working directory: %v", err)
 	}
-	projectRoot := filepath.Dir(execPath)
 
 	// Initialize SQLite database in project root
 	dbPath := filepath.Join(projectRoot, "pokedex.db")

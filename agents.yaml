@@ -1,0 +1,448 @@
+# PokeDB - AI Agent Configuration
+# Multi-agent system for the Go/Gin/HTMX Pokémon encyclopedia
+# Generated from project analysis on 2026-11-07
+
+project:
+  name: "PokeDB"
+  description: "Full-stack Pokémon encyclopedia with Go/Gin, HTMX, TailwindCSS, SQLite"
+  version: "1.0.0"
+  root: "/Users/herkafitra/Documents/pokedex-go"
+  language: "go"
+  framework: "gin"
+  frontend: ["htmx", "tailwindcss"]
+  database: "sqlite3"
+  build:
+    command: "go build -o pokedex-server ."
+    binary: "pokedex-server"
+  run:
+    command: "go run main.go"
+    port: 8080
+  test:
+    command: "go test ./..."
+    coverage: "go test -coverprofile=coverage.out ./..."
+
+# Agent definitions
+agents:
+
+  # =========================================================================
+  # COORDINATION LAYER
+  # =========================================================================
+
+  - id: "orchestrator"
+    name: "Orchestrator"
+    role: "coordinator"
+    description: "Top-level task decomposition, cross-agent coordination, architectural decisions"
+    model: "nemotron-3-ultra"
+    tools: ["task", "read", "glob", "grep", "find", "bash", "write", "edit"]
+    capabilities:
+      - "Decompose features into agent-assignable slices"
+      - "Enforce contracts between agents"
+      - "Resolve cross-cutting concerns (DB schema changes, API changes)"
+      - "Quality gate: verify integration before yielding"
+    context:
+      - "README.md"
+      - "main.go"
+      - "go.mod"
+      - "agents.yaml"
+    spawn_policy: "single"  # Only one orchestrator per session
+
+  - id: "architect"
+    name: "Architect"
+    role: "architecture"
+    description: "System design, data models, API contracts, migration planning"
+    model: "nemotron-3-ultra"
+    tools: ["read", "glob", "grep", "find", "write", "edit", "bash"]
+    capabilities:
+      - "Database schema evolution (database/db.go, database/crud.go)"
+      - "API endpoint design (handlers/handlers.go)"
+      - "Model definitions (models/pokemon.go)"
+      - "Template structure (templates/)"
+      - "Performance optimization (indexing, query patterns)"
+    owns:
+      - "database/db.go"
+      - "database/crud.go"
+      - "models/pokemon.go"
+      - "handlers/handlers.go:contracts"
+
+  # =========================================================================
+  # BACKEND AGENTS
+  # =========================================================================
+
+  - id: "db-engineer"
+    name: "Database Engineer"
+    role: "database"
+    description: "SQLite schema, migrations, queries, connection pooling, performance"
+    model: "nemotron-3-ultra"
+    tools: ["read", "edit", "bash", "glob", "grep", "find", "write"]
+    capabilities:
+      - "Schema changes & migrations (database/db.go:migrate)"
+      - "CRUD operations (database/crud.go)"
+      - "Bulk insert optimization (BulkCreatePokemon)"
+      - "Pagination queries (GetPokemonPage)"
+      - "Connection lifecycle (ConnectDB, CloseDB)"
+      - "Indexing strategy for search/filter"
+    owns:
+      - "database/db.go"
+      - "database/crud.go"
+    tests:
+      - "database/crud_test.go"
+    contracts:
+      - "models.Pokemon struct"
+      - "database.DB global"
+
+  - id: "api-engineer"
+    name: "API Engineer"
+    role: "handlers"
+    description: "Gin HTTP handlers, routing, request/response, HTMX integration"
+    model: "nemotron-3-ultra"
+    tools: ["read", "edit", "bash", "glob", "grep", "find", "write"]
+    capabilities:
+      - "REST + HTMX endpoints (handlers/handlers.go)"
+      - "Request parsing & validation"
+      - "HTML template rendering"
+      - "HTMX-specific responses (HX-Trigger, HX-Redirect, partial swaps)"
+      - "Pagination HTML generation (buildPagination)"
+      - "Search endpoint (PokemonSearch)"
+      - "Form handling (Create, Edit, Store, Update)"
+    owns:
+      - "handlers/handlers.go"
+    depends_on:
+      - "db-engineer"  # Uses database.CRUD
+      - "template-engineer"  # Renders templates
+    tests:
+      - "handlers/handlers_test.go"
+      - "handlers/debug_test.go"
+
+  - id: "seeder-engineer"
+    name: "Seeder Engineer"
+    role: "seeder"
+    description: "PokéAPI integration, concurrent fetching, data transformation, seeding CLI"
+    model: "nemotron-3-ultra"
+    tools: ["read", "edit", "bash", "glob", "grep", "find", "write"]
+    capabilities:
+      - "PokéAPI client (seed/seed.go)"
+      - "Worker pool concurrency (20 workers default)"
+      - "Data transformation: API → models.Pokemon"
+      - "Description cleaning (HTML entity decode, version filtering)"
+      - "Evolution chain resolution"
+      - "Resume/idempotent seeding (getExistingIDs)"
+      - "CLI flags (-seed, -limit)"
+    owns:
+      - "seed/seed.go"
+    depends_on:
+      - "db-engineer"  # Uses BulkCreatePokemon
+      - "architect"  # Model changes affect transformation
+    tests:
+      - "seed/seed_test.go"
+
+  - id: "model-engineer"
+    name: "Model Engineer"
+    role: "models"
+    description: "Data structures, validation, serialization, type safety"
+    model: "nemotron-3-ultra"
+    tools: ["read", "edit", "bash", "glob", "grep", "find", "write"]
+    capabilities:
+      - "Pokemon struct definition (models/pokemon.go)"
+      - "JSON tags for API serialization"
+      - "Database column mapping"
+      - "Validation rules (omitted, but could add)"
+    owns:
+      - "models/pokemon.go"
+    contracts:
+      - "Used by: db-engineer, api-engineer, seeder-engineer, template-engineer"
+    tests:
+      - "models/pokemon_test.go"
+
+  # =========================================================================
+  # FRONTEND AGENTS
+  # =========================================================================
+
+  - id: "template-engineer"
+    name: "Template Engineer"
+    role: "templates"
+    description: "Go HTML templates, HTMX partials, TailwindCSS components, responsiveness"
+    model: "nemotron-3-ultra"
+    tools: ["read", "edit", "bash", "glob", "grep", "find", "write"]
+    capabilities:
+      - "Base layout (templates/index.html)"
+      - "Pokémon grid cards (templates/partials.html)"
+      - "Detail view (templates/pokemon_show.html, pokemon_detail.html)"
+      - "Forms (templates/pokemon_form.html)"
+      - "Empty states (templates/list_empty.html)"
+      - "Stats widget (templates/stats.html)"
+      - "HTMX attributes: hx-get, hx-post, hx-target, hx-swap, hx-trigger"
+      - "TailwindCSS utility classes, dark mode, responsive breakpoints"
+    owns:
+      - "templates/*.html"
+    depends_on:
+      - "api-engineer"  # Handler data → template variables
+      - "model-engineer"  # Struct fields → template access
+
+  # =========================================================================
+  # QUALITY AGENTS
+  # =========================================================================
+
+  - id: "test-engineer"
+    name: "Test Engineer"
+    role: "testing"
+    description: "Unit tests, integration tests, test utilities, coverage"
+    model: "nemotron-3-ultra"
+    tools: ["read", "edit", "bash", "glob", "grep", "find", "write"]
+    capabilities:
+      - "Table-driven tests for CRUD (database/crud_test.go)"
+      - "Handler tests with httptest (handlers/handlers_test.go)"
+      - "Seeder mock tests (seed/seed_test.go)"
+      - "Model validation tests (models/pokemon_test.go)"
+      - "Test fixtures & helpers"
+      - "Coverage reporting"
+    owns:
+      - "*_test.go (all packages)"
+    runs:
+      - "go test ./... -v"
+      - "go test -coverprofile=coverage.out ./..."
+
+  - id: "lint-engineer"
+    name: "Lint Engineer"
+    role: "linting"
+    description: "Go vet, staticcheck, golangci-lint, formatting"
+    model: "nemotron-3-ultra"
+    tools: ["bash", "read"]
+    capabilities:
+      - "go vet ./..."
+      - "gofmt -l ."
+      - "staticcheck ./... (if installed)"
+      - "golangci-lint run (if configured)"
+    runs:
+      - "go vet ./..."
+      - "gofmt -l ."
+      - "go build ./..."
+
+  # =========================================================================
+  # DEVOPS AGENTS
+  # =========================================================================
+
+  - id: "build-engineer"
+    name: "Build Engineer"
+    role: "build"
+    description: "Compilation, binary production, cross-platform, Docker, release"
+    model: "nemotron-3-ultra"
+    tools: ["bash", "read", "write", "edit"]
+    capabilities:
+      - "Local build: go build -o pokedex-server ."
+      - "CGO handling (sqlite3 requires gcc)"
+      - "Cross-compilation (GOOS/GOARCH)"
+      - "Dockerfile (multi-stage)"
+      - "systemd service file"
+      - "Asset embedding (templates/)"
+    owns:
+      - "Dockerfile"
+      - "pokedex.service"
+      - "Build scripts"
+    runs:
+      - "go build -o pokedex-server ."
+      - "docker build -t pokedex ."
+
+  - id: "deploy-engineer"
+    name: "Deploy Engineer"
+    role: "deployment"
+    description: "Production deployment, systemd, Docker, environment config"
+    model: "nemotron-3-ultra"
+    tools: ["bash", "read", "write", "edit"]
+    capabilities:
+      - "Binary deployment"
+      - "systemd service management"
+      - "Docker Compose / Kubernetes manifests"
+      - "Environment variables (PORT)"
+      - "Database migration on deploy"
+      - "Health checks"
+    depends_on:
+      - "build-engineer"
+
+# =========================================================================
+# AGENT INTERACTION GRAPH
+# =========================================================================
+
+# Data flow: seeder → db → api → templates
+# Dependencies (edges = "depends_on")
+interactions:
+  - from: "seeder-engineer"
+    to: "db-engineer"
+    via: "database.BulkCreatePokemon"
+  - from: "api-engineer"
+    to: "db-engineer"
+    via: "database.{Create,Get,Update,Delete,Count}Pokemon"
+  - from: "api-engineer"
+    to: "template-engineer"
+    via: "c.HTML() with template names"
+  - from: "template-engineer"
+    to: "model-engineer"
+    via: "models.Pokemon struct fields"
+  - from: "architect"
+    to: ["db-engineer", "api-engineer", "model-engineer", "template-engineer"]
+    via: "Schema/API contracts"
+  - from: "orchestrator"
+    to: "*"
+    via: "Task delegation"
+
+# =========================================================================
+# TASK TEMPLATES
+# =========================================================================
+
+task_templates:
+  - name: "Add new Pokémon field"
+    description: "End-to-end: DB schema → Model → Seeder → API → Templates"
+    agents: ["architect", "db-engineer", "model-engineer", "seeder-engineer", "api-engineer", "template-engineer", "test-engineer"]
+    steps:
+      - "architect: Design schema change + API contract"
+      - "db-engineer: ALTER TABLE + CRUD updates"
+      - "model-engineer: Add field to Pokemon struct + JSON tag"
+      - "seeder-engineer: Transform new API field in worker()"
+      - "api-engineer: Handle form input + rendering"
+      - "template-engineer: Update forms, detail view, grid cards"
+      - "test-engineer: Add test coverage for new field"
+
+  - name: "New API endpoint"
+    description: "Add a new REST/HTMX endpoint"
+    agents: ["architect", "api-engineer", "template-engineer", "test-engineer"]
+    steps:
+      - "architect: Define route, method, request/response"
+      - "api-engineer: Implement handler in handlers.go"
+      - "template-engineer: Create partial/template if HTMX"
+      - "test-engineer: Add handler test"
+
+  - name: "Performance optimization"
+    description: "Query optimization, indexing, caching"
+    agents: ["db-engineer", "architect", "test-engineer"]
+    steps:
+      - "db-engineer: Analyze slow queries, add indexes"
+      - "architect: Review schema for normalization"
+      - "test-engineer: Benchmark before/after"
+
+  - name: "UI/UX improvement"
+    description: "TailwindCSS, HTMX interactions, responsive design"
+    agents: ["template-engineer", "api-engineer", "test-engineer"]
+    steps:
+      - "template-engineer: Modify templates/*.html"
+      - "api-engineer: Adjust HTMX response headers if needed"
+      - "test-engineer: Verify no regressions"
+
+# =========================================================================
+# CONVENTIONS & RULES
+# =========================================================================
+
+conventions:
+  code_style:
+    - "Standard Go formatting (gofmt)"
+    - "Error wrapping with %w"
+    - "Context passing for HTTP handlers"
+    - "Table-driven tests"
+    - "No global state except database.DB"
+
+  htmx_patterns:
+    - "Partial templates for HTMX targets (block names match hx-target)"
+    - "HX-Trigger for cross-component updates (stats, list)"
+    - "HX-Redirect for post-create navigation"
+    - "hx-swap: outerHTML for replace, beforeend for append"
+
+  database:
+    - "Migrations in database/db.go:migrate() only"
+    - "Bulk inserts use transaction (BulkCreatePokemon)"
+    - "Pagination uses LIMIT/OFFSET (GetPokemonPage)"
+    - "Soft deletes NOT used (hard DELETE)"
+
+  seeding:
+    - "Worker pool: 20 concurrent (configurable)"
+    - "Idempotent: skip existing by PokéAPI ID"
+    - "Descriptions: English only, flavor_text_entries, cleaned"
+    - "Evolves_from: from evolution_chain API"
+
+  templates:
+    - "All templates in templates/*.html"
+    - "LoadHTMLGlob in main.go"
+    - "Partials defined in partials.html with {{define}}"
+    - "Tailwind via CDN (no build step)"
+
+  testing:
+    - "Test files: *_test.go alongside source"
+    - "Database tests use temporary DB files"
+    - "Handler tests use httptest.NewRecorder"
+    - "Seeder tests mock HTTP client"
+
+# =========================================================================
+# ENVIRONMENT
+# =========================================================================
+
+environment:
+  required:
+    - "Go 1.22+"
+    - "gcc (for CGO sqlite3)"
+  optional:
+    - "air (live reload): go install github.com/cosmtrek/air@latest"
+    - "staticcheck: go install honnef.co/go/tools/cmd/staticcheck@latest"
+    - "golangci-lint: brew install golangci-lint"
+  variables:
+    - "PORT: server port (default 8080)"
+
+# =========================================================================
+# ENTRYPOINTS FOR COMMON OPERATIONS
+# =========================================================================
+
+entrypoints:
+  dev:
+    description: "Start development server with live reload"
+    command: "air"
+    fallback: "go run main.go"
+
+  seed:
+    description: "Seed database (Gen 1 = 151 Pokémon)"
+    command: "go run main.go -seed -limit 151"
+
+  seed_all:
+    description: "Seed all Pokémon (~1351, 10+ min)"
+    command: "go run main.go -seed -limit 0"
+
+  test:
+    description: "Run all tests"
+    command: "go test ./... -v"
+
+  lint:
+    description: "Run linters"
+    command: "go vet ./... && gofmt -l ."
+
+  build:
+    description: "Build production binary"
+    command: "go build -o pokedex-server ."
+
+  docker_build:
+    description: "Build Docker image"
+    command: "docker build -t pokedex ."
+
+  docker_run:
+    description: "Run Docker container"
+    command: "docker run -p 8080:8080 -v $(pwd)/pokedex.db:/app/pokedex.db pokedex"
+
+# =========================================================================
+# AGENT SPAWN RULES
+# =========================================================================
+
+spawn_rules:
+  - "Orchestrator spawns ALL other agents via task tool"
+  - "Agents NEVER spawn other agents (flat hierarchy)"
+  - "Max 8 concurrent agents (1 orchestrator + 7 workers)"
+  - "Shared context via agents.yaml + README.md + main.go"
+  - "File ownership: each file owned by ONE agent (see owns:)"
+  - "Cross-ownership changes require architect approval"
+
+# =========================================================================
+# VERIFICATION CHECKLIST (run before yielding)
+# =========================================================================
+
+verification:
+  - "go build ./... succeeds"
+  - "go test ./... passes"
+  - "go vet ./... clean"
+  - "Manual smoke: go run main.go -seed -limit 10 && go run main.go"
+  - "Open http://localhost:8080 → verify grid, search, detail, create, edit, delete"
+  - "HTMX partial swaps work (no full page reloads on pagination/search)"
+  - "Dark mode renders correctly"
+  - "Responsive: mobile < 640px, tablet 640-1024px, desktop > 1024px"
